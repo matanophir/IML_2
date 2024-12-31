@@ -2,9 +2,13 @@ def visualize_clf(clf, X, Y, title,
                   xlabel, ylabel,
                   marker_size=50,
                   grid_length=300,
-                  linewidths=None):
+                  linewidths=None,
+                  text=None):
+
     import matplotlib.pyplot as plt
     import pandas as pd
+    import numpy as np
+    import seaborn as sns
     from matplotlib.colors import ListedColormap
     
     if isinstance(X, pd.DataFrame):
@@ -55,6 +59,11 @@ def visualize_clf(clf, X, Y, title,
                     linewidths=linewidths)
 
     plt.title(title, fontsize=20)
+    if text:
+      plt.suptitle(text, fontsize=12, color='gray', style='italic')
+
+          
+
     plt.axis("tight")
     plt.show()
    
