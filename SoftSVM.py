@@ -48,9 +48,7 @@ class SoftSVM(BaseEstimator, ClassifierMixin):
         norm = np.linalg.norm(w)
 
         # TODO: complete the loss calculation
-        norm = norm**2
-
-        loss = norm + C * (np.sum(np.maximum(0, 1 - hinge_inputs))) # broadcasting
+        loss = norm**2 + C * (np.sum(np.maximum(0, 1 - hinge_inputs))) # broadcasting
 
         return loss
 
@@ -69,12 +67,19 @@ class SoftSVM(BaseEstimator, ClassifierMixin):
         # TODO: calculate the analytical sub-gradient of soft-SVM w.r.t w and b
         z = y * (X @ w + b) # like hinge_inputs
         fz = np.where(z >= 1, 0, -1).reshape(-1,1) # for broadcasting. apparently np doesn't add dims like torch..
-        s = np.sum(fz * y.reshape(-1,1) * X, axis = 0)
+        
+        # s = np.sum(fz * y.reshape(-1,1) * X, axis = 0)
+        s = np.squeeze(X.T @ (fz * y.reshape(-1, 1)))  # Use matrix multiplication instead of summation. need (n_features,)
+
+        m1 = fz * y
+        m2 = fz * y.reshape(-1, 1)
 
         g_w =  2*w + C * s
-        g_b = C * np.sum(fz * y)
+        g_b = C * np.sum(fz * y.reshape(-1, 1)) #goddamn np add dim when didn't use .reshape (╯°□°）╯︵ ┻━┻)) because of broadcasting it was (32,1) x (32,) = (32,32) and not (32,1) x (32,1) = (32,1)
 
         return g_w, g_b
+
+
 
     def fit_with_logs(self, X, y, max_iter: int = 2000, keep_losses: bool = True):
         """
@@ -145,7 +150,6 @@ class SoftSVM(BaseEstimator, ClassifierMixin):
         # TODO: compute the predicted labels (+1 or -1)
         y_pred = X @ self.w + self.b
         y_pred = np.where(y_pred > 0, 1, -1)
-        # y_pred = np.sign(y_pred)
 
         return y_pred
 
